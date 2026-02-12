@@ -1,0 +1,43 @@
+import { Mentor } from "./types";
+
+export const mentors: Mentor[] = [
+  {
+    id: "m1",
+    username: "rajesh_mentor",
+    password: "password123",
+    role: "mentor",
+    name: "Rajesh Kumar",
+    field: "study",
+    experience: "15 years in education & academic mentoring",
+    bio: "Former IIT professor passionate about empowering underprivileged students through quality education and career guidance.",
+    avatar: "RK",
+    studentsGuided: 45,
+    sessionsCompleted: 120,
+  },
+  {
+    id: "m2",
+    username: "priya_mentor",
+    password: "password123",
+    role: "mentor",
+    name: "Priya Sharma",
+    field: "sports",
+    experience: "10 years as national-level athlete & coach",
+    bio: "National badminton champion turned mentor. Believes sports can transform lives and build discipline in young minds.",
+    avatar: "PS",
+    studentsGuided: 30,
+    sessionsCompleted: 85,
+  },
+  {
+    id: "m3",
+    username: "amit_mentor",
+    password: "password123",
+    role: "mentor",
+    name: "Amit Patel",
+    field: "business",
+    experience: "20 years in entrepreneurship & startup ecosystem",
+    bio: "Serial entrepreneur who built 3 successful startups. Dedicated to helping youth from humble backgrounds discover their entrepreneurial potential.",
+    avatar: "AP",
+    studentsGuided: 25,
+    sessionsCompleted: 60,
+  },
+];
