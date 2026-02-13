@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, Users, UserCheck, MessageCircle, Video,
-  User, BookOpen, Clock, Bookmark,
+  User, Bookmark, TrendingUp, Eye, Heart, BarChart3,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -13,6 +13,7 @@ const mentorItems = [
   { title: "Dashboard", url: "/mentor/dashboard", icon: LayoutDashboard },
   { title: "Discover Students", url: "/mentor/discover", icon: Users },
   { title: "Selected Students", url: "/mentor/selected", icon: UserCheck },
+  { title: "Student Insights", url: "/mentor/insights", icon: BarChart3 },
   { title: "Chat", url: "/mentor/chat", icon: MessageCircle },
   { title: "Video Sessions", url: "/mentor/sessions", icon: Video },
 ];
@@ -20,6 +21,9 @@ const mentorItems = [
 const studentItems = [
   { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
   { title: "My Mentor", url: "/student/mentor", icon: User },
+  { title: "My Growth", url: "/student/growth", icon: TrendingUp },
+  { title: "My Performance", url: "/student/performance", icon: Eye },
+  { title: "Support Requests", url: "/student/support", icon: Heart },
   { title: "Chat", url: "/student/chat", icon: MessageCircle },
   { title: "Video Sessions", url: "/student/sessions", icon: Video },
   { title: "Saved Sessions", url: "/student/saved", icon: Bookmark },

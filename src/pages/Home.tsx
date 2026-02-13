@@ -1,12 +1,27 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, Users, BookOpen, Trophy, ArrowRight } from "lucide-react";
+import { SupportCard } from "@/components/SupportCard";
+import { supportPrograms } from "@/data/supportPrograms";
+import { Heart, Users, BookOpen, Trophy, ArrowRight, HandHeart } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
   { icon: Users, title: "Connect", desc: "Matching mentors with students who need guidance the most." },
   { icon: BookOpen, title: "Learn", desc: "Personalized sessions in studies, sports, and business." },
   { icon: Trophy, title: "Grow", desc: "Building confidence, direction, and life skills for a brighter future." },
+];
+
+const stories = [
+  {
+    name: "Anita Devi",
+    quote: "My mentor helped me believe I could become an engineer. Now I'm studying coding every day.",
+    field: "Study",
+  },
+  {
+    name: "Ravi Singh",
+    quote: "Without Hold A Hand, I would have never gotten proper cricket coaching. My mentor changed everything.",
+    field: "Sports",
+  },
 ];
 
 export default function Home() {
@@ -81,6 +96,67 @@ export default function Home() {
               <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
               <p className="text-sm text-muted-foreground">{f.desc}</p>
             </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Student Stories */}
+      <section className="bg-secondary/30 py-16">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-2xl font-bold text-foreground mb-2">Student Stories</h2>
+            <p className="text-sm text-muted-foreground">Real impact from real connections</p>
+          </motion.div>
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {stories.map((s, i) => (
+              <motion.div
+                key={s.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+                className="bg-card rounded-xl p-6 card-shadow"
+              >
+                <p className="text-sm text-muted-foreground italic mb-4">"{s.quote}"</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full hero-gradient flex items-center justify-center text-xs font-semibold text-primary-foreground">
+                    {s.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{s.name}</p>
+                    <p className="text-xs text-muted-foreground">{s.field}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Support / Donate Section */}
+      <section className="container mx-auto px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-center mb-10"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-medium mb-4">
+            <HandHeart className="h-3 w-3" />
+            Make a Difference
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Support Our Students</h2>
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+            Every contribution directly impacts a student's journey. Choose how you'd like to help.
+          </p>
+        </motion.div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {supportPrograms.map(p => (
+            <SupportCard key={p.id} program={p} />
           ))}
         </div>
       </section>
