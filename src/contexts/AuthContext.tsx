@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { User, Mentor, Student, UserRole } from "@/data/types";
 import { mentors } from "@/data/mentors";
 import { students as studentsData } from "@/data/students";
+import { setUnauthorizedHandler, clearUnauthorizedHandler } from "@/services";
 
 interface AuthContextType {
   user: User | null;
