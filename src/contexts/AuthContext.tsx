@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { User, Mentor, Student, UserRole } from "@/data/types";
 import { mentors } from "@/data/mentors";
 import { students as studentsData } from "@/data/students";
+import { setUnauthorizedHandler, clearUnauthorizedHandler } from "@/services";
 
 interface AuthContextType {
   user: User | null;
@@ -44,6 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [allUsers]);
 
   const logout = useCallback(() => setUser(null), []);
+
+  // Wire 401 middleware to auto-logout
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    return () => clearUnauthorizedHandler();
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
