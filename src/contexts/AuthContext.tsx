@@ -46,6 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(() => setUser(null), []);
 
+  // Wire 401 middleware to auto-logout
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    return () => clearUnauthorizedHandler();
+  }, [logout]);
+
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
       {children}
