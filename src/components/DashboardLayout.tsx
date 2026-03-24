@@ -29,6 +29,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user?.name}
               </span>

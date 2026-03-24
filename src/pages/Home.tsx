@@ -110,6 +110,7 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link to="/login">Log In</Link>
             </Button>
