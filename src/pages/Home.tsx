@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 import heroImg from "@/assets/hero-children-studying.jpg";
 import mentorImg from "@/assets/mentor-teaching.jpg";
@@ -109,6 +110,7 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link to="/login">Log In</Link>
             </Button>
