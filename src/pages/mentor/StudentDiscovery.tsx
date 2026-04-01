@@ -48,7 +48,7 @@ export default function StudentDiscovery() {
                   unselectStudent(user!.id, s.id);
                   toast({ title: "Student removed", description: `${s.name} removed from your list.` });
                 }}
-                onViewInsights={() => navigate("/mentor/insights")}
+                
               />
             );
           }}
