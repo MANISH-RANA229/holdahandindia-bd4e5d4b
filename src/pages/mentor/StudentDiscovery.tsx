@@ -44,7 +44,7 @@ export default function StudentDiscovery() {
                   selectStudent(user!.id, s.id);
                   toast({ title: "Student selected", description: `${s.name} added to your mentorship list.` });
                 }}
-                onDeselect={() => {
+                onUnselect={() => {
                   unselectStudent(user!.id, s.id);
                   toast({ title: "Student removed", description: `${s.name} removed from your list.` });
                 }}
