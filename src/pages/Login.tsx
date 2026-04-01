@@ -1,3 +1,6 @@
+/**
+ * Login page — validates input with Zod before attempting auth.
+ */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,21 +12,36 @@ import { Heart, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mentors } from "@/data/mentors";
 import { students } from "@/data/students";
+import { loginSchema } from "@/lib/validation";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(username, password);
+
+    /* Validate with Zod */
+    const result = loginSchema.safeParse({ username, password });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+
+    const success = login(result.data.username, result.data.password);
     if (success) {
       toast({ title: "Welcome back!", description: "Logged in successfully." });
       const allUsers = [...mentors, ...students];
-      const user = allUsers.find(u => u.username === username);
+      const user = allUsers.find(u => u.username === result.data.username);
       if (user?.role === "mentor") navigate("/mentor/dashboard");
       else navigate("/student/dashboard");
     } else {
@@ -52,10 +70,12 @@ export default function Login() {
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-sm">Username</Label>
                 <Input id="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter your username" required />
+                {errors.username && <p className="text-xs text-destructive">{errors.username}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm">Password</Label>
                 <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" required />
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
               <Button type="submit" className="w-full">Log In</Button>
               <p className="text-center text-xs text-muted-foreground">
