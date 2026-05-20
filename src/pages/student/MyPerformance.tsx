@@ -1,13 +1,31 @@
+/**
+ * MyPerformance — Spec 05 redesign.
+ * Performance hero + metrics card + activity heatmap + badge chips.
+ */
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppData } from "@/contexts/AppDataContext";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { ActivityStatusBadge } from "@/components/ActivityStatusBadge";
-import { getActivityStatus } from "@/data/seriousnessData";
 import { Student } from "@/data/types";
-import { Eye, AlertTriangle } from "lucide-react";
+
+const HEATMAP_LEVELS = [
+  0, 0, 1, 2, 3, 4, 3, 2, 1, 0, 2, 3, 4, 2, 1, 3, 2, 1, 4, 3, 2, 1, 0, 2, 3, 4, 3,
+  2, 1, 2, 3,
+];
+
+const HEATMAP_COLORS = [
+  "#f3f4f6",
+  "rgba(224,120,71,.2)",
+  "rgba(224,120,71,.4)",
+  "rgba(224,120,71,.65)",
+  "#e07847",
+];
+
+const DAY_HEADERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+const BADGES = [
+  { emoji: "🔥", title: "7-Day Streak", sub: "Active learner", bg: "#fdf0e8", color: "#e07847" },
+  { emoji: "🎯", title: "Goal Crusher", sub: "4 goals done", bg: "#eaf4ef", color: "#1b5c3d" },
+  { emoji: "⭐", title: "Top Student",  sub: "88% score",    bg: "#eff6ff", color: "#1d4ed8" },
+];
 
 export default function MyPerformance() {
   const { user } = useAuth();
@@ -15,85 +33,287 @@ export default function MyPerformance() {
   const student = user as Student;
   const record = getSeriousnessRecord(student.id);
 
+  const consistency = record?.consistencyScore ?? 88;
+  const attendance = record?.attendanceRate ?? 92;
+  const missed = record?.missedSessions ?? 1;
+  const overall = Math.round((consistency + attendance) / 2);
+
   return (
-    <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Eye className="h-5 w-5 text-primary" />
-            My Performance
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Your attendance and consistency metrics</p>
+    <>
+      {/* Hero banner (green gradient) */}
+      <section
+        className="flex items-center justify-between flex-wrap"
+        style={{
+          background: "linear-gradient(118deg, #1b5c3d 0%, #2d7a52 100%)",
+          borderRadius: 20,
+          padding: "26px 32px",
+          marginBottom: 22,
+          gap: 20,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            width: 240,
+            height: 240,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,.05)",
+            bottom: -60,
+            right: -40,
+            pointerEvents: "none",
+          }}
+        />
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 480 }}>
+          <h2
+            className="font-serif-display"
+            style={{ fontSize: 26, color: "white", marginBottom: 6 }}
+          >
+            Performance Overview
+          </h2>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,.6)",
+              lineHeight: 1.5,
+            }}
+          >
+            Your consistency and attendance for this month. Keep your streak going!
+          </p>
         </div>
 
-        {record ? (
-          <div className="space-y-6">
-            <div className="grid sm:grid-cols-3 gap-4">
-              <Card className="card-shadow">
-                <CardContent className="p-5 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Attendance</p>
-                  <p className="text-3xl font-bold text-foreground">{record.attendanceRate}%</p>
-                </CardContent>
-              </Card>
-              <Card className="card-shadow">
-                <CardContent className="p-5 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Consistency</p>
-                  <p className="text-3xl font-bold text-foreground">{record.consistencyScore}%</p>
-                </CardContent>
-              </Card>
-              <Card className="card-shadow">
-                <CardContent className="p-5 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Status</p>
-                  <div className="mt-2">
-                    <ActivityStatusBadge status={getActivityStatus(record)} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        <div
+          className="text-center"
+          style={{
+            background: "rgba(255,255,255,.15)",
+            border: "1px solid rgba(255,255,255,.2)",
+            borderRadius: 14,
+            padding: "16px 22px",
+            position: "relative",
+            zIndex: 1,
+            minWidth: 160,
+          }}
+        >
+          <p
+            className="font-serif-display"
+            style={{ fontSize: 42, color: "#fbbf24", lineHeight: 1 }}
+          >
+            {overall}%
+          </p>
+          <p
+            style={{
+              fontSize: 11,
+              color: "rgba(255,255,255,.6)",
+              marginTop: 4,
+            }}
+          >
+            Overall Score
+          </p>
+        </div>
+      </section>
 
-            <Card className="card-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Detailed Metrics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Attendance Rate</span>
-                    <span className="font-semibold text-foreground">{record.attendanceRate}%</span>
-                  </div>
-                  <Progress value={record.attendanceRate} className="h-2" />
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Consistency Score</span>
-                    <span className="font-semibold text-foreground">{record.consistencyScore}%</span>
-                  </div>
-                  <Progress value={record.consistencyScore} className="h-2" />
-                </div>
-                <div className="flex justify-between text-xs pt-2 border-t border-border">
-                  <span className="text-muted-foreground">Missed Sessions</span>
-                  <span className={`font-semibold ${record.missedSessions > 3 ? "text-destructive" : "text-foreground"}`}>
-                    {record.missedSessions}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 18,
+        }}
+      >
+        {/* Metrics */}
+        <article className="mentor-shell-card mentor-shell-card-p">
+          <p className="ms-section-title">Performance Metrics</p>
 
-            {record.consistencyScore < 60 && (
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20">
-                <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-foreground">
-                  Your consistency is below average. If consistency drops further, mentor priority may reduce. Stay committed!
-                </p>
-              </div>
-            )}
+          <MetricRow
+            label="Consistency Score"
+            bar={consistency}
+            barClass="ms-bar-sf"
+            value={`${consistency}%`}
+            valueColor="var(--sf-sf)"
+          />
+          <MetricRow
+            label="Attendance Rate"
+            bar={attendance}
+            barClass="ms-bar-gr"
+            value={`${attendance}%`}
+          />
+          <MetricRow
+            label="Assignments Submitted"
+            bar={85}
+            barClass="ms-bar-sf"
+            value="17 / 20"
+          />
+          <MetricRow label="Sessions Completed" value="18 of 19" />
+          <MetricRow
+            label="Missed Sessions"
+            value={String(missed)}
+            valueColor={missed > 3 ? "#dc2626" : undefined}
+          />
+          <MetricRow label="Goals Achieved" value="4 of 5 ✓" valueColor="var(--sf-gr)" />
+          <MetricRow
+            label="Current Streak"
+            value="🔥 7 days"
+            valueColor="var(--sf-sf)"
+            isLast
+          />
+        </article>
+
+        {/* Activity + Badges */}
+        <article className="mentor-shell-card mentor-shell-card-p">
+          <p className="ms-section-title">Monthly Activity</p>
+
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 3,
+              marginBottom: 6,
+            }}
+          >
+            {DAY_HEADERS.map((d, i) => (
+              <span
+                key={i}
+                className="text-center"
+                style={{ fontSize: 9, color: "var(--sf-mtl)" }}
+              >
+                {d}
+              </span>
+            ))}
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-sm text-muted-foreground">No performance data available yet.</p>
+
+          <div className="ms-heatmap">
+            {HEATMAP_LEVELS.slice(0, 31).map((level, i) => (
+              <span
+                key={i}
+                className="ms-heatmap-cell"
+                style={{ background: HEATMAP_COLORS[level] }}
+              />
+            ))}
+          </div>
+
+          <div
+            className="flex items-center"
+            style={{
+              gap: 12,
+              marginTop: 12,
+              fontSize: 11,
+              color: "var(--sf-mt)",
+              flexWrap: "wrap",
+            }}
+          >
+            <Legend bg="#f3f4f6" label="None" />
+            <Legend bg="rgba(224,120,71,.4)" label="Low" />
+            <Legend bg="#e07847" label="Active" />
+          </div>
+
+          <div
+            style={{
+              height: 1,
+              background: "rgba(0,0,0,.08)",
+              margin: "16px 0",
+            }}
+          />
+
+          <p className="ms-section-title">Badges Earned</p>
+          <div className="flex flex-wrap" style={{ gap: 8 }}>
+            {BADGES.map((b) => (
+              <div
+                key={b.title}
+                className="ms-badge-chip"
+                style={{ background: b.bg }}
+              >
+                <span style={{ fontSize: 18 }} aria-hidden>
+                  {b.emoji}
+                </span>
+                <div>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: b.color,
+                    }}
+                  >
+                    {b.title}
+                  </p>
+                  <p style={{ fontSize: 10, color: "var(--sf-mt)", marginTop: 2 }}>
+                    {b.sub}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </>
+  );
+}
+
+function MetricRow({
+  label,
+  bar,
+  barClass = "ms-bar-sf",
+  value,
+  valueColor,
+  isLast,
+}: {
+  label: string;
+  bar?: number;
+  barClass?: string;
+  value: string;
+  valueColor?: string;
+  isLast?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between"
+      style={{
+        padding: "13px 0",
+        borderBottom: isLast ? "none" : "1px solid rgba(0,0,0,.08)",
+        gap: 16,
+      }}
+    >
+      <span style={{ fontSize: 13, color: "var(--sf-ch)" }}>{label}</span>
+      <div className="flex items-center" style={{ gap: 16 }}>
+        {typeof bar === "number" && (
+          <div style={{ width: 160 }}>
+            <div className="ms-bar-track">
+              <div
+                className={`ms-bar-fill ${barClass}`}
+                style={{ width: `${bar}%` }}
+              />
+            </div>
           </div>
         )}
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: valueColor ?? "var(--sf-ch)",
+            minWidth: 70,
+            textAlign: "right",
+          }}
+        >
+          {value}
+        </span>
       </div>
-    </DashboardLayout>
+    </div>
+  );
+}
+
+function Legend({ bg, label }: { bg: string; label: string }) {
+  return (
+    <span className="flex items-center" style={{ gap: 4 }}>
+      <span
+        style={{
+          width: 12,
+          height: 12,
+          borderRadius: 3,
+          background: bg,
+          display: "inline-block",
+        }}
+      />
+      {label}
+    </span>
   );
 }

@@ -1,43 +1,93 @@
 /**
- * HowItWorksSection — numbered step cards.
+ * HowItWorksSection — 4 numbered step circles connected by a dashed saffron line.
  */
-import { motion } from "framer-motion";
-import { fadeUp } from "./animations";
 import { howItWorks } from "./homeData";
 
 export function HowItWorksSection() {
   return (
-    <section className="container mx-auto px-4 md:px-8 py-20 md:py-24">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        className="text-center mb-14"
-      >
-        <motion.p variants={fadeUp} custom={0} className="text-primary font-semibold text-sm mb-2">
-          Simple Process
-        </motion.p>
-        <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-          How it works
-        </motion.h2>
-      </motion.div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-        {howItWorks.map((item, i) => (
-          <motion.div
-            key={item.step}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-30px" }}
-            variants={fadeUp}
-            custom={i}
-            className="relative text-center"
+    <section id="how" className="bg-sf-cream" style={{ padding: "100px 0" }}>
+      <div className="mx-auto" style={{ maxWidth: 1200, padding: "0 48px" }}>
+        {/* Header */}
+        <div className="text-center" style={{ marginBottom: 60 }}>
+          <p
+            className="text-sf-sf inline-block"
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              marginBottom: 18,
+            }}
           >
-            <span className="text-5xl font-black text-primary/10">{item.step}</span>
-            <h3 className="font-bold text-foreground mt-1 mb-2">{item.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-          </motion.div>
-        ))}
+            Simple Process
+          </p>
+          <h2
+            className="font-serif-display text-sf-ch"
+            style={{ fontSize: 48, lineHeight: 1.12, marginBottom: 14 }}
+          >
+            How it works
+          </h2>
+        </div>
+
+        {/* Steps grid with connecting dashed line */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 relative"
+          style={{ gap: 0 }}
+        >
+          {/* Dashed connector line (desktop only) */}
+          <div
+            className="hidden lg:block absolute"
+            style={{
+              top: 34,
+              left: "calc(12.5% + 8px)",
+              right: "calc(12.5% + 8px)",
+              height: 2,
+              background:
+                "repeating-linear-gradient(to right, var(--sf-sf) 0 8px, transparent 8px 16px)",
+              opacity: 0.35,
+              pointerEvents: "none",
+            }}
+          />
+
+          {howItWorks.map((item) => (
+            <div
+              key={item.step}
+              className="how-step text-center relative"
+              style={{ padding: "0 28px", marginBottom: 32 }}
+            >
+              <div
+                className="how-num mx-auto flex items-center justify-center font-serif-display"
+                style={{
+                  width: 68,
+                  height: 68,
+                  borderRadius: "50%",
+                  background: "var(--sf-w)",
+                  color: "var(--sf-sf)",
+                  border: "2px solid var(--sf-sf)",
+                  fontSize: 22,
+                  marginBottom: 24,
+                  boxShadow: "0 4px 16px rgba(224,120,71,.18)",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                {item.step}
+              </div>
+              <h3
+                className="text-sf-ch"
+                style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}
+              >
+                {item.title}
+              </h3>
+              <p
+                className="text-sf-mt"
+                style={{ fontSize: 14, lineHeight: 1.7 }}
+              >
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

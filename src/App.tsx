@@ -1,16 +1,17 @@
 /**
  * App.tsx — Root application component.
- * All dashboard routes are lazy-loaded via React.lazy + Suspense
- * to reduce initial bundle size and improve first paint.
+ * Authenticated routes share a single AppShell instance via RoleShell so the
+ * sidebar/topbar don't unmount on navigation.
  */
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppDataProvider } from "@/contexts/AppDataContext";
+import { RoleShell } from "@/components/RoleShell";
 
 /* Eagerly loaded pages (critical path) */
 import Home from "./pages/Home";
@@ -47,12 +48,13 @@ function PageLoader() {
   );
 }
 
-/** Route guard — redirects unauthenticated or wrong-role users */
-function ProtectedRoute({ children, role }: { children: React.ReactNode; role: "mentor" | "student" }) {
-  const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (user?.role !== role) return <Navigate to="/" />;
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+/** Route guard — used as a layout so all child routes share one auth check. */
+function ProtectedLayout({ role }: { role: "mentor" | "student" }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== role) return <Navigate to="/" replace />;
+  return <Outlet />;
 }
 
 const App = () => (
@@ -63,31 +65,41 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
 
-              {/* Mentor routes — lazy-loaded */}
-              <Route path="/mentor/dashboard" element={<ProtectedRoute role="mentor"><MentorDashboard /></ProtectedRoute>} />
-              <Route path="/mentor/discover" element={<ProtectedRoute role="mentor"><StudentDiscovery /></ProtectedRoute>} />
-              <Route path="/mentor/selected" element={<ProtectedRoute role="mentor"><SelectedStudents /></ProtectedRoute>} />
-              <Route path="/mentor/insights" element={<ProtectedRoute role="mentor"><StudentInsights /></ProtectedRoute>} />
-              <Route path="/mentor/chat" element={<ProtectedRoute role="mentor"><MentorChat /></ProtectedRoute>} />
-              <Route path="/mentor/sessions" element={<ProtectedRoute role="mentor"><MentorVideoSessions /></ProtectedRoute>} />
+                {/* Mentor — guard once, render shell once, swap inner pages */}
+                <Route element={<ProtectedLayout role="mentor" />}>
+                  <Route element={<RoleShell />}>
+                    <Route path="/mentor/dashboard" element={<MentorDashboard />} />
+                    <Route path="/mentor/discover"  element={<StudentDiscovery />} />
+                    <Route path="/mentor/selected"  element={<SelectedStudents />} />
+                    <Route path="/mentor/insights"  element={<StudentInsights />} />
+                    <Route path="/mentor/chat"      element={<MentorChat />} />
+                    <Route path="/mentor/sessions"  element={<MentorVideoSessions />} />
+                  </Route>
+                </Route>
 
-              {/* Student routes — lazy-loaded */}
-              <Route path="/student/dashboard" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
-              <Route path="/student/mentor" element={<ProtectedRoute role="student"><StudentMentor /></ProtectedRoute>} />
-              <Route path="/student/growth" element={<ProtectedRoute role="student"><MyGrowth /></ProtectedRoute>} />
-              <Route path="/student/performance" element={<ProtectedRoute role="student"><MyPerformance /></ProtectedRoute>} />
-              <Route path="/student/support" element={<ProtectedRoute role="student"><SupportRequest /></ProtectedRoute>} />
-              <Route path="/student/chat" element={<ProtectedRoute role="student"><StudentChat /></ProtectedRoute>} />
-              <Route path="/student/sessions" element={<ProtectedRoute role="student"><StudentVideoSessions /></ProtectedRoute>} />
-              <Route path="/student/saved" element={<ProtectedRoute role="student"><SavedSessions /></ProtectedRoute>} />
+                {/* Student — guard once, render shell once, swap inner pages */}
+                <Route element={<ProtectedLayout role="student" />}>
+                  <Route element={<RoleShell />}>
+                    <Route path="/student/dashboard"   element={<StudentDashboard />} />
+                    <Route path="/student/mentor"      element={<StudentMentor />} />
+                    <Route path="/student/growth"      element={<MyGrowth />} />
+                    <Route path="/student/performance" element={<MyPerformance />} />
+                    <Route path="/student/support"     element={<SupportRequest />} />
+                    <Route path="/student/chat"        element={<StudentChat />} />
+                    <Route path="/student/sessions"    element={<StudentVideoSessions />} />
+                    <Route path="/student/saved"       element={<SavedSessions />} />
+                  </Route>
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AppDataProvider>

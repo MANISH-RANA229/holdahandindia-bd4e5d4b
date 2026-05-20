@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { User, Mentor, Student, UserRole } from "@/data/types";
-import { mentors } from "@/data/mentors";
-import { students as studentsData } from "@/data/students";
-import { setUnauthorizedHandler, clearUnauthorizedHandler } from "@/services";
+import { User, Mentor, Student } from "@/data/types";
+import { authService, setUnauthorizedHandler, clearUnauthorizedHandler } from "@/services";
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => boolean;
-  signup: (userData: Partial<Mentor> | Partial<Student>) => boolean;
+  login: (username: string, password: string) => Promise<User | null>;
+  signup: (userData: Partial<Mentor> | Partial<Student>) => Promise<User | null>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,29 +21,74 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [customUsers, setCustomUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allUsers: User[] = [...mentors, ...studentsData, ...customUsers];
+  // Restore session on mount via /auth/me (if token exists in localStorage)
+  useEffect(() => {
+    const restoreSession = async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+        } else {
+          localStorage.removeItem("auth_token");
+        }
+      } catch {
+        localStorage.removeItem("auth_token");
+      } finally {
+        setLoading(false);
+      }
+    };
+    restoreSession();
+  }, []);
 
-  const login = useCallback((username: string, password: string): boolean => {
-    const found = allUsers.find(u => u.username === username && u.password === password);
-    if (found) {
-      setUser(found);
-      return true;
+  const login = useCallback(async (username: string, password: string): Promise<User | null> => {
+    try {
+      const result = await authService.login({ username, password });
+      if (result && result.user) {
+        if (result.token) {
+          localStorage.setItem("auth_token", result.token);
+        }
+        setUser(result.user);
+        return result.user;
+      }
+      return null;
+    } catch {
+      return null;
     }
-    return false;
-  }, [allUsers]);
+  }, []);
 
-  const signup = useCallback((userData: Partial<Mentor> | Partial<Student>): boolean => {
-    const exists = allUsers.find(u => u.username === userData.username);
-    if (exists) return false;
-    const newUser = { ...userData, id: `u${Date.now()}` } as User;
-    setCustomUsers(prev => [...prev, newUser]);
-    setUser(newUser);
-    return true;
-  }, [allUsers]);
+  const signup = useCallback(async (userData: Partial<Mentor> | Partial<Student>): Promise<User | null> => {
+    try {
+      const result = await authService.signup({ userData });
+      if (result && result.user) {
+        if (result.token) {
+          localStorage.setItem("auth_token", result.token);
+        }
+        setUser(result.user);
+        return result.user;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Ignore logout API errors
+    } finally {
+      localStorage.removeItem("auth_token");
+      setUser(null);
+    }
+  }, []);
 
   // Wire 401 middleware to auto-logout
   useEffect(() => {
@@ -53,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );

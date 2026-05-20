@@ -1,48 +1,83 @@
 /**
- * FeaturesSection — "How we change lives" grid of feature cards.
+ * FeaturesSection — "How we change lives" grid with saffron left-border cards.
  */
-import { motion } from "framer-motion";
-import { fadeUp } from "./animations";
 import { features } from "./homeData";
 
 export function FeaturesSection() {
   return (
-    <section className="container mx-auto px-4 md:px-8 py-20 md:py-24">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        className="text-center mb-14"
-      >
-        <motion.p variants={fadeUp} custom={0} className="text-primary font-semibold text-sm mb-2">
-          Our Approach
-        </motion.p>
-        <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-          How we change lives
-        </motion.h2>
-        <motion.p variants={fadeUp} custom={2} className="text-muted-foreground max-w-md mx-auto">
-          A holistic mentorship model that goes beyond academics
-        </motion.p>
-      </motion.div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-        {features.map((f, i) => (
-          <motion.div
-            key={f.title}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-30px" }}
-            variants={fadeUp}
-            custom={i}
-            className="bg-card rounded-2xl p-6 card-shadow hover:card-shadow-hover transition-shadow group"
+    <section id="about" className="bg-sf-cream" style={{ padding: "100px 0" }}>
+      <div className="mx-auto" style={{ maxWidth: 1200, padding: "0 48px" }}>
+        {/* Header */}
+        <div className="text-center" style={{ marginBottom: 60 }}>
+          <p
+            className="text-sf-sf inline-block"
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              marginBottom: 18,
+            }}
           >
-            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-5 group-hover:hero-gradient group-hover:text-primary-foreground transition-colors">
-              <f.icon className="h-5 w-5 text-primary group-hover:text-primary-foreground" />
+            Our Approach
+          </p>
+          <h2
+            className="font-serif-display text-sf-ch"
+            style={{ fontSize: 48, lineHeight: 1.12, marginBottom: 14 }}
+          >
+            How we change lives
+          </h2>
+          <p
+            className="text-sf-mt mx-auto"
+            style={{ fontSize: 17, lineHeight: 1.65, maxWidth: 500 }}
+          >
+            A holistic mentorship model that goes beyond academics
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          style={{ gap: 22 }}
+        >
+          {features.map((f) => (
+            <div
+              key={f.title}
+              className="bg-sf-w hover-rise"
+              style={{
+                borderRadius: 20,
+                padding: "36px 28px",
+                boxShadow: "var(--sf-shadow-sm)",
+                borderLeft: "4px solid var(--sf-sf)",
+              }}
+            >
+              <div
+                className="bg-sf-sfl flex items-center justify-center"
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  fontSize: 24,
+                  marginBottom: 22,
+                }}
+              >
+                {f.emoji}
+              </div>
+              <h3
+                className="text-sf-ch"
+                style={{ fontSize: 17, fontWeight: 700, marginBottom: 12 }}
+              >
+                {f.title}
+              </h3>
+              <p
+                className="text-sf-mt"
+                style={{ fontSize: 14, lineHeight: 1.75 }}
+              >
+                {f.desc}
+              </p>
             </div>
-            <h3 className="font-bold text-foreground mb-2">{f.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-          </motion.div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

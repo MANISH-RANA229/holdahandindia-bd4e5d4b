@@ -49,10 +49,17 @@ async function request<T>(
   const timeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
   try {
+    // Auto-attach JWT token from localStorage
+    const token = localStorage.getItem("auth_token");
+    const authHeaders: Record<string, string> = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
+
     const response = await fetch(url.toString(), {
       method,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...options.headers,
       },
       body: options.body ? JSON.stringify(options.body) : undefined,

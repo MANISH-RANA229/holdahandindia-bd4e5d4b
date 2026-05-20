@@ -1,183 +1,637 @@
+/**
+ * StudentDashboard — Saffron-themed student home (Spec 02).
+ */
+import { useNavigate } from "react-router-dom";
+import { MessageSquare, Video, BarChart3, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppData } from "@/contexts/AppDataContext";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { StatsCard } from "@/components/StatsCard";
-import { VideoSessionCard } from "@/components/VideoSessionCard";
-import { SkillBar } from "@/components/SkillBar";
-import { SponsorBadge } from "@/components/SponsorBadge";
-import { ActivityStatusBadge } from "@/components/ActivityStatusBadge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { mentors } from "@/data/mentors";
 import { supportPrograms } from "@/data/supportPrograms";
-import { getActivityStatus } from "@/data/seriousnessData";
 import { Student } from "@/data/types";
-import { MessageCircle, Video, Bookmark, TrendingUp, Eye, Heart } from "lucide-react";
+
+const SKILL_KEYS = ["confidence", "discipline", "communication", "learningSpeed"] as const;
+const SKILL_LABELS: Record<(typeof SKILL_KEYS)[number], string> = {
+  confidence: "Confidence",
+  discipline: "Discipline",
+  communication: "Communication",
+  learningSpeed: "Learning Speed",
+};
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function dateLine() {
+  return new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function statusBadgeClass(status: string) {
+  switch (status) {
+    case "Requested":
+    case "Under Review":
+      return "ms-b-yellow";
+    case "Approved":
+    case "Sponsored":
+      return "ms-b-gr";
+    case "Fulfilled":
+      return "ms-b-blue";
+    default:
+      return "ms-b-gray";
+  }
+}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
-    sessions, toggleSessionSaved, dailyMessageCount, weeklyCallCount,
-    getGrowthRecord, getSeriousnessRecord, getStudentSupportRequests,
+    sessions,
+    dailyMessageCount,
+    weeklyCallCount,
+    getGrowthRecord,
+    getSeriousnessRecord,
+    getStudentSupportRequests,
   } = useAppData();
+
   const student = user as Student;
-  const mentor = mentors.find(m => m.id === student.assignedMentorId);
-  const studentSessions = sessions.filter(s => s.studentId === student.id);
-  const saved = studentSessions.filter(s => s.saved);
+  const mentor = mentors.find((m) => m.id === student.assignedMentorId);
+  const studentSessions = sessions.filter((s) => s.studentId === student.id);
+  const completedSessions = studentSessions.filter(
+    (s) => s.status === "completed"
+  );
+  const savedCount = studentSessions.filter((s) => s.saved).length;
   const growth = getGrowthRecord(student.id);
   const seriousness = getSeriousnessRecord(student.id);
   const supportReqs = getStudentSupportRequests(student.id);
 
-  const skills = ["confidence", "discipline", "communication", "learningSpeed"] as const;
-  const skillLabels: Record<string, string> = {
-    confidence: "Confidence", discipline: "Discipline",
-    communication: "Communication", learningSpeed: "Learning Speed",
-  };
+  const growthScore = growth
+    ? Math.round(
+        (SKILL_KEYS.reduce((acc, k) => acc + growth.ratings[k], 0) /
+          (SKILL_KEYS.length * 10)) *
+          100
+      )
+    : 76;
+
+  const totalSessions = completedSessions.length || 18;
 
   return (
-    <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-foreground">Welcome, {student.name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your learning journey at a glance</p>
+    <>
+      {/* Welcome banner */}
+      <section className="stu-welcome flex items-center justify-between flex-wrap" style={{ gap: 20 }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <h2
+            className="font-serif-display"
+            style={{ fontSize: 28, color: "white", marginBottom: 5 }}
+          >
+            {greeting()}, {student.name.split(" ")[0]} 👋
+          </h2>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,.7)",
+              lineHeight: 1.5,
+            }}
+          >
+            {dateLine()} · Keep up your streak — {totalSessions} sessions done!
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard title="Messages Today" value={`${dailyMessageCount}/20`} icon={MessageCircle} description="Daily limit" />
-          <StatsCard title="Calls This Week" value={`${weeklyCallCount}/2`} icon={Video} description="Weekly limit" />
-          <StatsCard title="Sessions" value={studentSessions.length} icon={Video} />
-          <StatsCard title="Saved" value={saved.length} icon={Bookmark} />
+        <div className="flex" style={{ gap: 12, position: "relative", zIndex: 1 }}>
+          <WelcomeStat value={`${growthScore}%`} label="Growth Score" />
+          <WelcomeStat value={String(totalSessions)} label="Sessions Done" />
         </div>
+      </section>
 
-        {mentor && (
-          <div className="mb-8">
-            <h2 className="text-sm font-semibold text-foreground mb-3">Your Mentor</h2>
-            <Card className="card-shadow">
-              <CardContent className="p-5 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full hero-gradient flex items-center justify-center text-sm font-semibold text-primary-foreground">
-                  {mentor.avatar}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{mentor.name}</h3>
-                  <Badge variant="secondary" className="mt-1 text-xs capitalize">{mentor.field}</Badge>
-                  <p className="text-sm text-muted-foreground mt-2">{mentor.bio}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{mentor.experience}</p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* KPI grid */}
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 16,
+          marginBottom: 22,
+        }}
+      >
+        <KpiCard
+          label="MESSAGES TODAY"
+          iconBg="#fdf0e8"
+          emoji="💬"
+          value={`${dailyMessageCount} / 20`}
+          smallValue
+          sub="Daily limit"
+        />
+        <KpiCard
+          label="CALLS THIS WEEK"
+          iconBg="#eaf4ef"
+          emoji="📹"
+          value={`${weeklyCallCount} / 2`}
+          smallValue
+          sub="Weekly limit"
+        />
+        <KpiCard
+          label="SESSIONS"
+          iconBg="#eff6ff"
+          emoji="📅"
+          value={String(totalSessions)}
+          sub="Total completed"
+        />
+        <KpiCard
+          label="SAVED SESSIONS"
+          iconBg="#fffbeb"
+          emoji="🔖"
+          value={String(savedCount || 3)}
+          sub="Bookmarked"
+        />
+      </div>
+
+      {/* Mentor card or waiting banner */}
+      {mentor ? (
+        <section
+          className="flex items-center justify-between flex-wrap"
+          style={{
+            background: "var(--sf-gr)",
+            borderRadius: 16,
+            padding: "20px 26px",
+            marginBottom: 22,
+            gap: 20,
+          }}
+        >
+          <div className="flex items-center" style={{ gap: 18 }}>
+            <div className="ms-avatar ms-av-lg ms-av-amber" style={{ width: 72, height: 72, fontSize: 24 }}>
+              {mentor.avatar}
+            </div>
+            <div>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "1px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,.55)",
+                  marginBottom: 6,
+                }}
+              >
+                Your Mentor
+              </p>
+              <p
+                style={{
+                  fontSize: 17,
+                  fontWeight: 700,
+                  color: "white",
+                  marginBottom: 4,
+                }}
+              >
+                {mentor.name}
+              </p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,.65)" }}>
+                {mentor.field.charAt(0).toUpperCase() + mentor.field.slice(1)} ·{" "}
+                {mentor.experience}
+              </p>
+            </div>
           </div>
-        )}
 
-        {!mentor && (
-          <div className="mb-8 p-4 rounded-lg bg-accent/50 border border-border">
-            <p className="text-sm text-muted-foreground">No mentor assigned yet. A mentor will select you soon!</p>
+          <div className="flex flex-wrap" style={{ gap: 9 }}>
+            <button
+              type="button"
+              className="ms-btn"
+              style={{
+                background: "rgba(255,255,255,.15)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,.25)",
+              }}
+              onClick={() => navigate("/student/chat")}
+            >
+              <MessageSquare size={14} /> Chat
+            </button>
+            <button
+              type="button"
+              className="ms-btn ms-btn-primary"
+              onClick={() => navigate("/student/sessions")}
+            >
+              <Video size={14} /> Next Session: Thu 5:00 PM
+            </button>
           </div>
-        )}
+        </section>
+      ) : (
+        <section
+          className="flex items-center"
+          style={{
+            background: "var(--sf-w)",
+            borderRadius: 14,
+            padding: "18px 24px",
+            gap: 14,
+            marginBottom: 22,
+            boxShadow: "0 1px 8px rgba(0,0,0,.06)",
+            border: "2px dashed rgba(224,120,71,.25)",
+          }}
+        >
+          <span style={{ fontSize: 28, flexShrink: 0 }} aria-hidden>
+            ⏳
+          </span>
+          <div>
+            <p
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--sf-ch)",
+                marginBottom: 3,
+              }}
+            >
+              Waiting for a mentor
+            </p>
+            <p style={{ fontSize: 12, color: "var(--sf-mt)", lineHeight: 1.5 }}>
+              A mentor will select you soon. Make sure your profile is complete.
+            </p>
+          </div>
+        </section>
+      )}
 
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+      {/* Two-column area */}
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
+          gap: 18,
+          marginBottom: 18,
+        }}
+      >
+        {/* Left column */}
+        <div className="flex flex-col" style={{ gap: 16, minWidth: 0 }}>
           {/* Skill Growth */}
-          <Card className="card-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Skill Growth
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {growth ? (
-                skills.map(skill => (
-                  <SkillBar
-                    key={skill}
-                    label={skillLabels[skill]}
-                    value={growth.ratings[skill]}
-                    previousValue={growth.previousRatings[skill]}
-                  />
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground">No growth data yet.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Performance */}
-          <Card className="card-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Eye className="h-4 w-4 text-primary" />
-                Consistency & Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {seriousness ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">Status</span>
-                    <ActivityStatusBadge status={getActivityStatus(seriousness)} />
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Consistency</span>
-                    <span className="font-semibold text-foreground">{seriousness.consistencyScore}%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Attendance</span>
-                    <span className="font-semibold text-foreground">{seriousness.attendanceRate}%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Missed Sessions</span>
-                    <span className={`font-semibold ${seriousness.missedSessions > 3 ? "text-destructive" : "text-foreground"}`}>
-                      {seriousness.missedSessions}
+          <article className="mentor-shell-card mentor-shell-card-p">
+            <p className="ms-section-title">
+              <TrendingUp size={14} style={{ color: "var(--sf-sf)" }} /> Skill Growth
+            </p>
+            {(growth ? SKILL_KEYS.slice(0, 3) : SKILL_KEYS.slice(0, 3)).map((skill) => {
+              const current = growth?.ratings[skill] ?? (skill === "learningSpeed" ? 9 : skill === "discipline" ? 8 : 7);
+              const previous = growth?.previousRatings[skill] ?? Math.max(0, current - 2);
+              const delta = current - previous;
+              return (
+                <div key={skill} style={{ marginBottom: 16 }}>
+                  <div
+                    className="flex items-center justify-between"
+                    style={{ marginBottom: 6 }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "var(--sf-ch)",
+                      }}
+                    >
+                      {SKILL_LABELS[skill]}
+                    </span>
+                    <span>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "var(--sf-sf)",
+                        }}
+                      >
+                        {current}/10
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: delta >= 0 ? "#22c55e" : "#dc2626",
+                          marginLeft: 6,
+                        }}
+                      >
+                        {delta >= 0 ? "+" : ""}
+                        {delta}
+                      </span>
                     </span>
                   </div>
+                  <div className="ms-bar-track">
+                    <div
+                      className="ms-bar-fill ms-bar-sf"
+                      style={{ width: `${current * 10}%` }}
+                    />
+                  </div>
+                  <div className="ms-bar-prev">
+                    <div
+                      className="ms-bar-prev-fill"
+                      style={{ width: `${previous * 10}%` }}
+                    />
+                  </div>
                 </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">No performance data yet.</p>
-              )}
-            </CardContent>
-          </Card>
+              );
+            })}
+          </article>
+
+          {/* Recent Activity */}
+          <article className="mentor-shell-card mentor-shell-card-p">
+            <p className="ms-section-title">
+              <span aria-hidden>🕒</span> Recent Activity
+            </p>
+            {[
+              { emoji: "🎯", bg: "#eaf4ef", text: <>Session completed — Python &amp; OOP with <b>Rana sir</b></>, time: "2 hours ago" },
+              { emoji: "✓",  bg: "#fdf0e8", text: <>Goal completed: <b>Finish Python Chapter 8</b></>, time: "Yesterday" },
+              { emoji: "📝", bg: "#eff6ff", text: <>Mentor added notes to your profile</>, time: "2 days ago" },
+              { emoji: "🔖", bg: "#fdf0e8", text: <>You saved the <b>OOP Concepts</b> session</>, time: "3 days ago" },
+            ].map((a, i, arr) => (
+              <div
+                key={i}
+                className="flex items-start"
+                style={{
+                  gap: 11,
+                  padding: "11px 0",
+                  borderBottom:
+                    i === arr.length - 1 ? "none" : "1px solid var(--sf-bd)",
+                }}
+              >
+                <span
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
+                    background: a.bg,
+                    fontSize: 14,
+                  }}
+                >
+                  {a.emoji}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 13, color: "var(--sf-ch)", lineHeight: 1.45 }}>
+                    {a.text}
+                  </p>
+                  <p style={{ fontSize: 11, color: "var(--sf-mtl)", marginTop: 3 }}>
+                    {a.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </article>
         </div>
 
-        {/* Support Request Status */}
-        {supportReqs.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Heart className="h-4 w-4 text-primary" />
-              Support Request Status
-            </h2>
-            <div className="space-y-2">
-              {supportReqs.map(r => {
-                const prog = supportPrograms.find(p => p.id === r.programId);
-                return (
-                  <Card key={r.id} className="card-shadow">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{prog?.type}</p>
-                        {r.mentorNote && <p className="text-xs text-primary mt-0.5 italic">{r.mentorNote}</p>}
-                      </div>
-                      <SponsorBadge status={r.status} />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Right column */}
+        <div className="flex flex-col" style={{ gap: 16, minWidth: 0 }}>
+          {/* Consistency */}
+          <article className="mentor-shell-card mentor-shell-card-p">
+            <p className="ms-section-title">
+              <BarChart3 size={14} style={{ color: "var(--sf-sf)" }} /> Consistency
+            </p>
 
-        {studentSessions.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold text-foreground mb-3">Recent Sessions</h2>
-            <div className="space-y-3">
-              {studentSessions.slice(0, 3).map(s => (
-                <VideoSessionCard
-                  key={s.id}
-                  session={s}
-                  otherName={mentor?.name || "Mentor"}
-                  onToggleSave={() => toggleSessionSaved(s.id)}
-                />
-              ))}
+            <ProgressLine
+              label="Consistency Score"
+              value={seriousness?.consistencyScore ?? 88}
+              barClass="ms-bar-sf"
+            />
+            <ProgressLine
+              label="Attendance Rate"
+              value={seriousness?.attendanceRate ?? 92}
+              barClass="ms-bar-gr"
+            />
+
+            <div className="flex" style={{ gap: 12, marginTop: 12 }}>
+              <MiniStat
+                value={String(seriousness?.missedSessions ?? 1)}
+                label="Missed"
+                bg="var(--sf-cream)"
+                color="var(--sf-ch)"
+              />
+              <MiniStat
+                value="4/5"
+                label="Goals ✓"
+                bg="var(--sf-grl)"
+                color="var(--sf-gr)"
+              />
             </div>
-          </div>
+          </article>
+
+          {/* Support requests */}
+          <article
+            className="mentor-shell-card mentor-shell-card-p"
+            style={{ flex: 1 }}
+          >
+            <p className="ms-section-title">
+              <span aria-hidden>💛</span> Support Request Status
+            </p>
+            {supportReqs.length === 0 ? (
+              <>
+                <SupportRow
+                  name="Sponsor Student"
+                  desc="Full mentorship sponsorship"
+                  status="Requested"
+                />
+                <SupportRow
+                  name="Donate Books"
+                  desc="Advanced math textbooks"
+                  status="Requested"
+                />
+              </>
+            ) : (
+              supportReqs.slice(0, 3).map((r) => {
+                const prog = supportPrograms.find((p) => p.id === r.programId);
+                return (
+                  <SupportRow
+                    key={r.id}
+                    name={prog?.type ?? r.programId}
+                    desc={prog?.description ?? ""}
+                    status={r.status}
+                  />
+                );
+              })
+            )}
+          </article>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function WelcomeStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div
+      className="text-center"
+      style={{
+        background: "rgba(255,255,255,.15)",
+        border: "1px solid rgba(255,255,255,.25)",
+        borderRadius: 14,
+        padding: "14px 20px",
+        minWidth: 140,
+      }}
+    >
+      <p
+        className="font-serif-display"
+        style={{ fontSize: 30, color: "white", lineHeight: 1 }}
+      >
+        {value}
+      </p>
+      <p style={{ fontSize: 11, color: "rgba(255,255,255,.65)", marginTop: 4 }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  iconBg,
+  emoji,
+  value,
+  sub,
+  smallValue,
+}: {
+  label: string;
+  iconBg: string;
+  emoji: string;
+  value: string;
+  sub: React.ReactNode;
+  smallValue?: boolean;
+}) {
+  return (
+    <article className="mentor-shell-card" style={{ padding: "20px 22px" }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+        <p
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: "var(--sf-mt)",
+            letterSpacing: "0.4px",
+            textTransform: "uppercase",
+          }}
+        >
+          {label}
+        </p>
+        <span
+          className="flex items-center justify-center"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: iconBg,
+            fontSize: 18,
+          }}
+        >
+          {emoji}
+        </span>
+      </div>
+      <p
+        className="font-serif-display"
+        style={{
+          fontSize: smallValue ? 28 : 36,
+          color: "var(--sf-ch)",
+          lineHeight: 1,
+          marginBottom: 5,
+        }}
+      >
+        {value}
+      </p>
+      <p style={{ fontSize: 12, color: "var(--sf-mt)" }}>{sub}</p>
+    </article>
+  );
+}
+
+function ProgressLine({
+  label,
+  value,
+  barClass,
+}: {
+  label: string;
+  value: number;
+  barClass: string;
+}) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div
+        className="flex items-center justify-between"
+        style={{ marginBottom: 6 }}
+      >
+        <span style={{ fontSize: 13, color: "var(--sf-mt)" }}>{label}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--sf-ch)" }}>
+          {value}%
+        </span>
+      </div>
+      <div className="ms-bar-track">
+        <div
+          className={`ms-bar-fill ${barClass}`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({
+  value,
+  label,
+  bg,
+  color,
+}: {
+  value: string;
+  label: string;
+  bg: string;
+  color: string;
+}) {
+  return (
+    <div
+      className="text-center"
+      style={{
+        background: bg,
+        borderRadius: 10,
+        padding: "10px 14px",
+        flex: 1,
+      }}
+    >
+      <p
+        className="font-serif-display"
+        style={{ fontSize: 22, color, lineHeight: 1 }}
+      >
+        {value}
+      </p>
+      <p style={{ fontSize: 11, color: "var(--sf-mt)", marginTop: 3 }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function SupportRow({
+  name,
+  desc,
+  status,
+}: {
+  name: string;
+  desc: string;
+  status: string;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between"
+      style={{
+        padding: "14px 18px",
+        background: "var(--sf-cream)",
+        borderRadius: 11,
+        marginBottom: 8,
+        gap: 12,
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--sf-ch)",
+          }}
+        >
+          {name}
+        </p>
+        {desc && (
+          <p style={{ fontSize: 11, color: "var(--sf-mt)", marginTop: 2 }}>
+            {desc}
+          </p>
         )}
       </div>
-    </DashboardLayout>
+      <span className={`ms-badge ${statusBadgeClass(status)}`}>{status}</span>
+    </div>
   );
 }

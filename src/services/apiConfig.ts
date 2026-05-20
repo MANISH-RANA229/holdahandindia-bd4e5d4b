@@ -7,8 +7,8 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
-  USE_STATIC_DATA: true, // Toggle to false when backend is ready
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
+  USE_STATIC_DATA: false, // Set to true to use static demo data
   TIMEOUT: 10000,
 };
 
@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   MENTORS: {
     LIST: "/mentors",
     BY_ID: (id: string) => `/mentors/${id}`,
+    DASHBOARD: "/mentor/dashboard",
     STUDENTS: (id: string) => `/mentors/${id}/students`,
     SELECT_STUDENT: (id: string) => `/mentors/${id}/select-student`,
     DESELECT_STUDENT: (id: string) => `/mentors/${id}/deselect-student`,

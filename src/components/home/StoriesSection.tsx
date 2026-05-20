@@ -1,64 +1,151 @@
 /**
- * StoriesSection — student testimonial cards.
+ * StoriesSection — testimonial cards on white bg with cream cards and field badges.
  */
-import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
-import { fadeUp } from "./animations";
 import { stories } from "./homeData";
 
 export function StoriesSection() {
   return (
-    <section className="bg-secondary/30 py-20 md:py-24">
-      <div className="container mx-auto px-4 md:px-8">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="text-center mb-14"
-        >
-          <motion.p variants={fadeUp} custom={0} className="text-primary font-semibold text-sm mb-2">
+    <section id="stories" className="bg-sf-w" style={{ padding: "100px 0" }}>
+      <div className="mx-auto" style={{ maxWidth: 1200, padding: "0 48px" }}>
+        {/* Header */}
+        <div className="text-center" style={{ marginBottom: 60 }}>
+          <p
+            className="text-sf-sf inline-block"
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              marginBottom: 18,
+            }}
+          >
             Real Impact
-          </motion.p>
-          <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+          </p>
+          <h2
+            className="font-serif-display text-sf-ch"
+            style={{ fontSize: 48, lineHeight: 1.12, marginBottom: 14 }}
+          >
             Student Stories
-          </motion.h2>
-          <motion.p variants={fadeUp} custom={2} className="text-muted-foreground max-w-md mx-auto">
+          </h2>
+          <p
+            className="text-sf-mt mx-auto"
+            style={{ fontSize: 17, lineHeight: 1.65, maxWidth: 500 }}
+          >
             Hear from the students whose lives have been transformed
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {stories.map((s, i) => (
-            <motion.div
+        {/* Cards */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-3"
+          style={{ gap: 24 }}
+        >
+          {stories.map((s) => (
+            <div
               key={s.name}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-30px" }}
-              variants={fadeUp}
-              custom={i}
-              className="bg-card rounded-2xl p-6 card-shadow relative"
+              className="bg-sf-cream hover-rise relative"
+              style={{
+                borderRadius: 22,
+                padding: "36px 30px",
+                boxShadow: "var(--sf-shadow-sm)",
+              }}
             >
-              <Quote className="h-8 w-8 text-primary/15 absolute top-5 right-5" />
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: s.rating }).map((_, idx) => (
-                  <Star key={idx} className="h-3.5 w-3.5 fill-warning text-warning" />
+              {/* Quote mark */}
+              <span
+                className="font-serif-display absolute"
+                style={{
+                  top: 20,
+                  right: 24,
+                  fontSize: 72,
+                  lineHeight: 1,
+                  color: "rgba(224,120,71,0.1)",
+                }}
+              >
+                "
+              </span>
+
+              {/* Field badge */}
+              <span
+                className="bg-sf-grl text-sf-gr absolute"
+                style={{
+                  top: 30,
+                  left: 30,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.6px",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                }}
+              >
+                {s.field}
+              </span>
+
+              {/* Stars */}
+              <div className="flex" style={{ gap: 3, marginTop: 36 }}>
+                {Array.from({ length: s.rating }).map((_, i) => (
+                  <svg
+                    key={i}
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="var(--sf-sf)"
+                  >
+                    <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+                  </svg>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground italic leading-relaxed mb-5">
+
+              {/* Quote */}
+              <p
+                className="text-sf-mt"
+                style={{
+                  fontSize: 15,
+                  fontStyle: "italic",
+                  lineHeight: 1.8,
+                  margin: "18px 0 24px",
+                }}
+              >
                 "{s.quote}"
               </p>
-              <div className="flex items-center gap-3 pt-4 border-t border-border">
-                <div className="w-10 h-10 rounded-full hero-gradient flex items-center justify-center text-sm font-bold text-primary-foreground">
+
+              {/* Author row */}
+              <div
+                className="flex items-center"
+                style={{
+                  gap: 14,
+                  paddingTop: 20,
+                  borderTop: "1px solid rgba(0,0,0,.07)",
+                }}
+              >
+                <div
+                  className="flex items-center justify-center text-white"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: "50%",
+                    background: s.avatarBg,
+                    fontSize: 17,
+                    fontWeight: 700,
+                  }}
+                >
                   {s.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Age {s.age} · {s.field}
+                  <p
+                    className="text-sf-ch"
+                    style={{ fontSize: 14, fontWeight: 700 }}
+                  >
+                    {s.name}
+                  </p>
+                  <p
+                    className="text-sf-mt"
+                    style={{ fontSize: 12, marginTop: 3 }}
+                  >
+                    Age {s.age} · {s.field.charAt(0) + s.field.slice(1).toLowerCase()}
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
